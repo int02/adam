@@ -17,7 +17,7 @@ import os
 import sys
 import logging
 from pathlib import Path
-import io
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -172,9 +172,16 @@ async def start_pentest(request: StartPentestRequest):
             root_logger = logging.getLogger()
             root_logger.addHandler(log_capture)
 
+            # Callback to set browser when ready
+            def set_browser_ready(browser):
+                global _active_browser
+                _active_browser = browser
+
             try:
                 status = "Running..."
-                _active_browser = await run(attack_type, _current_config, keep_browser_alive=True)
+                result_browser = await run(attack_type, _current_config, keep_browser_alive=True, browser_callback=set_browser_ready)
+                # Ensure _active_browser is set to the final result
+                _active_browser = result_browser
                 status = "Completed"
             except Exception as e:
                 logger.error(f"Pentest failed: {e}")
@@ -249,9 +256,20 @@ async def get_screenshot():
     global _active_browser
     try:
         if not _active_browser:
-            return Response("No active browser session", status_code=404)
+            return Response("No browser session", status_code=404)
 
-        # Assume browser has a screenshot method that returns bytes
+        if not hasattr(_active_browser, 'page') or _active_browser.page is None:
+            return Response("Browser not initialized", status_code=404)
+
+        # Check if page is ready
+        try:
+            # Try to get page title to check if it's loaded
+            title = await _active_browser.page.title()
+            if not title:
+                return Response("Page loading", status_code=404)
+        except Exception:
+            return Response("Page not ready", status_code=404)
+
         screenshot_bytes = await _active_browser.screenshot()
         return Response(content=screenshot_bytes, media_type="image/png")
     except Exception as e:

@@ -144,7 +144,7 @@ from core import get_vulnerability_mapper
 
 
 async def run(
-    attack_type: str = "adversarial_reasoning", config: Optional[Config] = None, keep_browser_alive: bool = False
+    attack_type: str = "adversarial_reasoning", config: Optional[Config] = None, keep_browser_alive: bool = False, browser_callback=None
 ):
     """
     Main pentest execution function with proper resource management
@@ -189,7 +189,12 @@ async def run(
             browser = Browser()
             await browser.start()
             ctx.browser = browser  # Store for cleanup
+
             await browser.open(active_config.target_url)
+
+            # Notify that browser is ready for screenshots
+            if browser_callback:
+                browser_callback(browser)
         except Exception as e:
             logger.error(f"Failed to initialize browser: {e}")
             raise

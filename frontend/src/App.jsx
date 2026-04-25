@@ -120,10 +120,10 @@ function App() {
     const interval = setInterval(async () => {
       try {
         const response = await fetch('/api/logs')
-        const data = await response.text()
-        if (data !== lastLogsRef.current) {
-          setLogs(data)
-          lastLogsRef.current = data
+        const logsText = await response.text()
+        if (logsText !== lastLogsRef.current) {
+          setLogs(logsText)
+          lastLogsRef.current = logsText
         }
       } catch (error) {
         // ignore
@@ -132,16 +132,20 @@ function App() {
   }
 
   const pollScreenshot = () => {
-    setScreenshotStatus("Polling for screenshots...")
+    setScreenshotStatus("Browser initializing...")
     const interval = setInterval(async () => {
       try {
-        setScreenshotStatus("Fetching screenshot...")
+        setScreenshotStatus("Checking browser...")
         const response = await fetch('/api/screenshot')
         if (response.ok) {
           const blob = await response.blob()
           const url = URL.createObjectURL(blob)
           setScreenshotUrl(url)
           setScreenshotStatus("Screenshot loaded")
+          clearInterval(interval) // Stop polling once we get a screenshot
+        } else if (response.status === 404) {
+          const text = await response.text()
+          setScreenshotStatus(`Browser not ready: ${text}`)
         } else {
           const text = await response.text()
           setScreenshotStatus(`Screenshot failed: ${text}`)
@@ -149,7 +153,7 @@ function App() {
       } catch (error) {
         setScreenshotStatus(`Screenshot error: ${error.message}`)
       }
-    }, 2000) // Update every 2 seconds
+    }, 5000) // Check every 5 seconds
 
     // Return cleanup function
     return () => {
