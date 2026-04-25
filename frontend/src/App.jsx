@@ -120,10 +120,21 @@ function App() {
     const interval = setInterval(async () => {
       try {
         const response = await fetch('/api/logs')
-        const logsText = await response.text()
-        if (logsText !== lastLogsRef.current) {
-          setLogs(logsText)
-          lastLogsRef.current = logsText
+        const responseText = await response.text()
+        // Try to parse as JSON
+        let data
+        try {
+          data = JSON.parse(responseText)
+        } catch (e) {
+          // If not JSON, treat as plain text
+          data = { logs: responseText }
+        }
+        const logsText = data.logs || ""
+        // Ensure newlines are properly handled
+        const formattedLogs = logsText.replace(/\\n/g, '\n')
+        if (formattedLogs !== lastLogsRef.current) {
+          setLogs(formattedLogs)
+          lastLogsRef.current = formattedLogs
         }
       } catch (error) {
         // ignore
@@ -437,11 +448,7 @@ function App() {
         <div className="right-panel">
           <div className="output-section">
             <h2>Output</h2>
-            <pre className="output-box" ref={outputRef}>
-              {logs.split('\n').map((line, index) => (
-                <div key={index}>{line}</div>
-              ))}
-            </pre>
+            <pre className="output-box" ref={outputRef}>{logs}</pre>
           </div>
           <div className="screenshot-section">
             <h2>Browser View</h2>

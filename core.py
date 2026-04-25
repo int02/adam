@@ -395,10 +395,10 @@ class Browser:
         return response
 
     async def screenshot(self) -> bytes:
-        """Take a screenshot of the current page"""
+        """Take a screenshot of the current page viewport"""
         if not self.page:
             raise Exception("Browser not started")
-        return await self.page.screenshot(full_page=True)
+        return await self.page.screenshot(full_page=False)
 
     async def close(self):
         """Close the browser and cleanup"""
