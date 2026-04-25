@@ -250,7 +250,7 @@ async def get_logs():
     logs_content = "\n".join(_logs_buffer)
     if not logs_content.endswith('\n'):
         logs_content += '\n'
-    return {"logs": logs_content}
+    return Response(content=logs_content, media_type="text/plain")
 
 
 @app.get("/api/screenshot")

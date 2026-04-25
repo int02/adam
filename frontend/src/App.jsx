@@ -120,24 +120,14 @@ function App() {
     const interval = setInterval(async () => {
       try {
         const response = await fetch('/api/logs')
-        const responseText = await response.text()
-        // Try to parse as JSON
-        let data
-        try {
-          data = JSON.parse(responseText)
-        } catch (e) {
-          // If not JSON, treat as plain text
-          data = { logs: responseText }
-        }
-        const logsText = data.logs || ""
-        // Ensure newlines are properly handled
-        const formattedLogs = logsText.replace(/\\n/g, '\n')
-        if (formattedLogs !== lastLogsRef.current) {
-          setLogs(formattedLogs)
-          lastLogsRef.current = formattedLogs
+        const logsContent = await response.text()
+
+        if (logsContent !== lastLogsRef.current) {
+          setLogs(logsContent)
+          lastLogsRef.current = logsContent
         }
       } catch (error) {
-        // ignore
+        console.error('Logs error:', error)
       }
     }, 1000)
   }
