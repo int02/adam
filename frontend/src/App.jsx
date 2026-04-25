@@ -437,7 +437,11 @@ function App() {
         <div className="right-panel">
           <div className="output-section">
             <h2>Output</h2>
-            <pre className="output-box" ref={outputRef}>{logs}</pre>
+            <pre className="output-box" ref={outputRef}>
+              {logs.split('\n').map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </pre>
           </div>
           <div className="screenshot-section">
             <h2>Browser View</h2>

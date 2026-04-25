@@ -247,7 +247,11 @@ async def get_status():
 @app.get("/api/logs")
 async def get_logs():
     """Get current pentest logs"""
-    return "\n".join(_logs_buffer)
+    # Ensure proper line endings
+    logs_content = "\n".join(_logs_buffer)
+    if not logs_content.endswith('\n'):
+        logs_content += '\n'
+    return Response(content=logs_content, media_type="text/plain; charset=utf-8")
 
 
 @app.get("/api/screenshot")
