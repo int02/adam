@@ -8,7 +8,6 @@ import json
 import logging
 import os
 import random
-import re
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass, field
@@ -107,18 +106,6 @@ def _import_datasets():
 
 # Configure logging
 logger = logging.getLogger(__name__)
-
-# Helper to extract JSON from model response (handles reasoning models like DeepSeek R1)
-def extract_json_from_response(response: str) -> str:
-    """Extract JSON from response, handling <think> tags and other formatting."""
-    # Remove <think> blocks
-    response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
-    # Find JSON-like structure
-    json_match = re.search(r'\{.*\}', response, re.DOTALL)
-    if json_match:
-        return json_match.group(0)
-    # Fallback: return the whole response
-    return response
 
 
 @dataclass
@@ -518,8 +505,7 @@ Return JSON:
 """
             try:
                 res = await self.llm.generate(prompt)
-                json_str = extract_json_from_response(res)
-                data = json.loads(json_str)
+                data = json.loads(res)
                 if isinstance(data, dict) and "prompts" in data:
                     prompts = data["prompts"]
                     processed_prompts = []
@@ -615,8 +601,7 @@ CRITICAL: Return ONLY valid JSON with no extra text, explanations, or formatting
         for attempt in range(2):  # Retry once on failure
             try:
                 res = await self.llm.generate(eval_prompt)
-                json_str = extract_json_from_response(res)
-                data = json.loads(json_str)
+                data = json.loads(res)
                 score = float(data.get("score", 0))
                 if not (0 <= score <= 10):
                     raise ValueError("Score out of range")
@@ -690,8 +675,7 @@ STRICT RULES:
 
 Return ONLY the strategy.
 """
-        res = await self.llm.generate(prompt)
-        return extract_json_from_response(res).strip()
+        return await self.llm.generate(prompt)
 
 
 class Refiner:
@@ -733,8 +717,7 @@ It must be meaningfully distinct from the previous one.
 
 Return ONLY the updated strategy.
 """
-        res = await self.llm.generate(prompt)
-        return extract_json_from_response(res).strip()
+        return await self.llm.generate(prompt)
 
 
 # Utility functions for batch operations
@@ -821,7 +804,7 @@ class RAGConfig:
     chunk_size: int = 1000
     chunk_overlap: int = 200
     min_chunk_length: int = 50
-    embedder_model: str = "sentence-transformers/all-mpnet-base-v2"
+    embedder_model: str = "all-MiniLM-L6-v2"
 
 
 class RAG:
@@ -964,13 +947,13 @@ class RAG:
 # Register services
 async def _create_jailbreak_rag():
     """Factory for jailbreak RAG"""
-    config = RAGConfig(collection_name="l1b3rt4s_v2", repo_path="tools/L1B3RT4S")
+    config = RAGConfig(collection_name="l1b3rt4s", repo_path="tools/L1B3RT4S")
     return RAG(config)
 
 
 async def _create_system_prompt_rag():
     """Factory for system prompt RAG"""
-    config = RAGConfig(collection_name="cl4r1t4s_v2", repo_path="tools/CL4R1T4S")
+    config = RAGConfig(collection_name="cl4r1t4s", repo_path="tools/CL4R1T4S")
     return RAG(config)
 
 
