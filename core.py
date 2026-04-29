@@ -140,10 +140,10 @@ class Config:
     unlimited_repeat: bool = False
 
     # Models
-    attacker_model: str = "huihui_ai/qwen2.5-abliterate:7b-instruct"
-    evaluator_model: str = "huihui_ai/deepseek-r1-abliterated:8b"
-    feedback_model: str = "huihui_ai/deepseek-r1-abliterated:8b"
-    refiner_model: str = "huihui_ai/qwen2.5-abliterate:7b-instruct"
+    attacker_model: str = "huihui_ai/deepseek-r1-abliterated:14b"
+    evaluator_model: str = "qwen3.5:9b"
+    feedback_model: str = "qwen3.5:9b"
+    refiner_model: str = "huihui_ai/deepseek-r1-abliterated:14b"
 
     # Prompt sending
     prompt_delay: float = 5.0
